@@ -61,21 +61,29 @@ def main(negative_samples_file, positive_samples_file, target_file, out_file):
 
     #  First run (only non-n elements):
     target_df = create_target_df(target_file)
+    print(target_df)
     non_n_df = target_df[target_df[NOT_CONTAINS_N_KEY]].drop(columns=[NOT_CONTAINS_N_KEY])
     non_n_preds = model.predict_proba(non_n_df)
+    print(non_n_df)
     avg_result = mean(non_n_preds[:, 1])
     print(f'Average probability = {avg_result}')
 
     #  Second run (replace n-containing elements with mean):
     target_preds = model.predict_proba(target_df.drop(columns=[NOT_CONTAINS_N_KEY]))
     target_df[PREDICTION_KEY] = target_preds[:, 1]
-    mask = target_df[NOT_CONTAINS_N_KEY]
+    print(target_preds[:, 1])
+    mask = target_df[NOT_CONTAINS_N_KEY] == False
     target_df.loc[mask, PREDICTION_KEY] = avg_result
 
     #  Print to file:
-    print('fixedStep chrom=chr21 start=0 step=1500 span=750', file=out_file)
+    # print('track type=wiggle_0 name="chr2L_200_100_fly_nomodifications_4mers" description="Prediction of enhancers of Drosophila melanogaster based on 4mers with frame_length=200 and step_length=100." visibility=full autoScale=off vieLimits=0.0:1.0 color=50,150,255 yLineMark=11.76 yLineOnOff=on priority=10', file=out_file)
+    # print('fixedStep chrom=chr21 start=1 step=1500 span=750', file=out_file)
+    print('track type=wiggle_0 name="db=vista tissue=both histmods= kmers=4mers chrom=chr21.id" description="enhancers prediction"  visibility=full autoScale=off vieLimits=0.0:1.0 color=50,150,255 yLineMark=11.76 yLineOnOff=on priority=10', file=out_file)
+    print('variableStep chrom=chr21 span=1500', file=out_file)
+    i = 1
     for pred in target_df[PREDICTION_KEY]:
-        print(pred, file=out_file)
+        print(f'{i} {pred:.6f}', file=out_file)
+        i += 750
 
 
 if __name__ == "__main__":
