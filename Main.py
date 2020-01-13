@@ -27,13 +27,19 @@ def create_train_df(neagtive_file, positive_file):
 
 
 def create_target_df(target_file):
-    pass
+    counts_list = []
+    for seq in FileParser.fasta_sample_generator(target_file):
+        counts = FrequencyCounter.count_freq(seq)
+        counts_list.append(counts)
+    df = pd.DataFrame(counts_list)
+    return df
 
 
 @click.command()
 @click.option('--negative_samples_file', '-n', type=click.File('r'), required=True)
 @click.option('--positive_samples_file', '-p', type=click.File('r'), required=True)
-def main(negative_samples_file, positive_samples_file):
+@click.option('--target_file', '-t', type=click.File('r'), required=True)
+def main(negative_samples_file, positive_samples_file, target_file):
     train_df = create_train_df(negative_samples_file, positive_samples_file)
     train_df, test_df = train_test_split(train_df, test_size=0.25, random_state=123)
     model = XGBClassifier()
@@ -46,7 +52,11 @@ def main(negative_samples_file, positive_samples_file):
     accuracy = accuracy_score(test_df.loc[:, SAMPLE_TYPE_KEY].astype(int), predictions)
     print("Accuracy: %.2f%%" % (accuracy * 100.0))
 
-    # print(train_df)
+    target_df = create_target_df(target_file)
+    print(target_df)
+    target_pred = model.predict(target_df)
+    print(target_pred)
+
 
 if __name__ == "__main__":
     main()

@@ -1,15 +1,14 @@
 import itertools
 import Bio.Seq
 
-from FileParser import *
-
 
 def count_freq(seq):
     combinations = itertools.product('ACGT', repeat=4)
     counts = {''.join(i): 0 for i in combinations}
-    length = 4
-    for chunk in [seq[0+i: length+i] for i in range(0, len(seq)-length)]:
-        counts[chunk] += 1
+    if 'N' not in seq:
+        length = 4
+        for chunk in [seq[0+i: length+i] for i in range(0, len(seq)-length)]:
+            counts[chunk] += 1
 
     to_delete = set()
     for pair in counts.items():
