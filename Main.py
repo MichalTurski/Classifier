@@ -3,6 +3,7 @@ import pandas as pd
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
 
 import FrequencyCounter
 import FileParser
@@ -39,23 +40,29 @@ def create_target_df(target_file):
 @click.option('--negative_samples_file', '-n', type=click.File('r'), required=True)
 @click.option('--positive_samples_file', '-p', type=click.File('r'), required=True)
 @click.option('--target_file', '-t', type=click.File('r'), required=True)
-def main(negative_samples_file, positive_samples_file, target_file):
+@click.option('--out_file', '-o', type=click.File('w'), required=True)
+def main(negative_samples_file, positive_samples_file, target_file, out_file):
     train_df = create_train_df(negative_samples_file, positive_samples_file)
     train_df, test_df = train_test_split(train_df, test_size=0.25, random_state=123)
-    model = XGBClassifier()
+    model = RandomForestClassifier()
+    # model = XGBClassifier()
     model.fit(train_df.loc[:, train_df.columns != SAMPLE_TYPE_KEY], train_df.loc[:, SAMPLE_TYPE_KEY])
-    print(model)
+    # print(model)
 
-    y_pred = model.predict(test_df.iloc[:, train_df.columns != SAMPLE_TYPE_KEY])
-    predictions = [round(value) for value in y_pred]
+    y_pred = model.predict_proba(test_df.iloc[:, train_df.columns != SAMPLE_TYPE_KEY])
+    predictions = [round(value[1]) for value in y_pred]
     print(test_df.loc[:, SAMPLE_TYPE_KEY])
     accuracy = accuracy_score(test_df.loc[:, SAMPLE_TYPE_KEY].astype(int), predictions)
     print("Accuracy: %.2f%%" % (accuracy * 100.0))
 
     target_df = create_target_df(target_file)
     print(target_df)
-    target_pred = model.predict(target_df)
-    print(target_pred)
+    target_preds = model.predict_proba(target_df)
+    print(target_preds)
+
+    print('fixedStep chrom=chr21 start=0 step=1500 span=750', file=out_file)
+    for pred in target_preds:
+        print(pred[1], file=out_file)
 
 
 if __name__ == "__main__":

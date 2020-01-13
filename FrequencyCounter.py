@@ -20,4 +20,9 @@ def count_freq(seq):
     for key in to_delete:
         counts.pop(key)
 
+    factor = sum(counts.values())
+    if factor != 0:
+        for k in counts:
+            counts[k] = counts[k]/factor
+
     return counts
