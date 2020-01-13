@@ -5,7 +5,8 @@ import Bio.Seq
 def count_freq(seq):
     combinations = itertools.product('ACGT', repeat=4)
     counts = {''.join(i): 0 for i in combinations}
-    if 'N' not in seq:
+    nonN = 'N' not in seq
+    if nonN:
         length = 4
         for chunk in [seq[0+i: length+i] for i in range(0, len(seq)-length)]:
             counts[chunk] += 1
@@ -25,4 +26,4 @@ def count_freq(seq):
         for k in counts:
             counts[k] = counts[k]/factor
 
-    return counts
+    return counts, nonN
